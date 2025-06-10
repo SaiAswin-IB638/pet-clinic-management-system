@@ -39,7 +39,7 @@ func Get() zerolog.Logger {
 
 		if os.Getenv("APP_ENV") != "development" {
 			fileLogger := &lumberjack.Logger{
-				Filename:   "pcms.log",
+				Filename:   "logs/pcms.log",
 				MaxSize:    5, 
 				MaxBackups: 10,
 				MaxAge:     14,

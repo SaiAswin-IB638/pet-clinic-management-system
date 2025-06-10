@@ -2,10 +2,11 @@ package main
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/MSaiAswin/pet-clinic-management-system/cmd/initializers"
-	"github.com/MSaiAswin/pet-clinic-management-system/internal/routes"
 	"github.com/MSaiAswin/pet-clinic-management-system/cmd/logger"
+	"github.com/MSaiAswin/pet-clinic-management-system/internal/routes"
 )
 
 func init() {
@@ -35,8 +36,8 @@ func main() {
 
 	http.Handle("/", router)
 
-	port := "8000"
-	l.Info().Str("port", port).Msg("Server is starting on port 8001")
+	port := os.Getenv("PORT")
+	l.Info().Str("port", port).Msg("Server is starting on port: "+port)
 	l.Fatal().Err(http.ListenAndServe(":"+port, nil)).Msg("Server failed to start")
 
 }
