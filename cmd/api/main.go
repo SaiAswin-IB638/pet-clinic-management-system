@@ -35,7 +35,7 @@ func main() {
 
 	http.Handle("/", router)
 
-	port := "8001"
+	port := "8000"
 	l.Info().Str("port", port).Msg("Server is starting on port 8001")
 	l.Fatal().Err(http.ListenAndServe(":"+port, nil)).Msg("Server failed to start")
 
