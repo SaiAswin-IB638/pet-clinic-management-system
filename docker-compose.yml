@@ -30,6 +30,8 @@ services:
     depends_on:
       - db
     restart: always
+    volumes:
+      - ./logs:/app/logs
     networks:
       - app_net
 
