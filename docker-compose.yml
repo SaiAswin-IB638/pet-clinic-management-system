@@ -37,12 +37,12 @@ services:
       - app_net
 
   nginx:
-    build:
-      context: ./nginx
-      dockerfile: Dockerfile
+    image: nginx:latest
     container_name: nginx_server
     ports:
       - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
     depends_on:
       - app
     restart: always

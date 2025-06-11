@@ -15,7 +15,9 @@ func NewRouter() *mux.Router {
 
 	router.Use(middleware.RequestLogger)
 
-	router.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
+	router.PathPrefix("/swagger/").Handler(httpSwagger.Handler(
+		httpSwagger.URL("http://localhost:8080/swagger/doc.json"),
+	))
 
 	router.HandleFunc("/signup", handlerService.SignupHandler).Methods("POST")
 	router.HandleFunc("/login", handlerService.LoginHandler).Methods("POST")
