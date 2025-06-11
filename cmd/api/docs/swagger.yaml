@@ -1,0 +1,867 @@
+definitions:
+  gorm.DeletedAt:
+    properties:
+      time:
+        type: string
+      valid:
+        description: Valid is true if Time is not NULL
+        type: boolean
+    type: object
+  handlers.AppointmentParams:
+    properties:
+      pet_id:
+        example: 1
+        type: integer
+      reason:
+        example: Regular checkup
+        type: string
+      slot:
+        example: "2023-10-01T10:00:00Z"
+        type: string
+    type: object
+  handlers.CreatePetRequest:
+    properties:
+      breed:
+        example: Golden Retriever
+        type: string
+      medical_history:
+        example: Healthy
+        type: string
+      name:
+        example: Buddy
+        type: string
+      species:
+        example: Dog
+        type: string
+    type: object
+  handlers.ErrorResponse:
+    properties:
+      error:
+        example: error message
+        type: string
+    type: object
+  handlers.LoginRequest:
+    properties:
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+  handlers.LoginSuccessResponse:
+    properties:
+      token:
+        example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ...
+        type: string
+    type: object
+  handlers.UpdateUserRequest:
+    properties:
+      contact:
+        example: "1234567890"
+        type: string
+      email:
+        example: john@doe.com
+        type: string
+      name:
+        example: John Doe
+        type: string
+      username:
+        example: johndoe
+        type: string
+    type: object
+  handlers.UploadPetDocumentResponse:
+    properties:
+      file_name:
+        example: document.pdf
+        type: string
+      message:
+        example: Pet document uploaded successfully
+        type: string
+    type: object
+  model.Appointment:
+    properties:
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      pet:
+        $ref: '#/definitions/model.Pet'
+      pet_id:
+        type: integer
+      reason:
+        type: string
+      slot:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.Pet:
+    properties:
+      breed:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      id:
+        type: integer
+      medical_history:
+        type: string
+      name:
+        type: string
+      owner_id:
+        type: integer
+      species:
+        type: string
+      updatedAt:
+        type: string
+    type: object
+  model.User:
+    properties:
+      contact:
+        type: string
+      createdAt:
+        type: string
+      deletedAt:
+        $ref: '#/definitions/gorm.DeletedAt'
+      email:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      password:
+        type: string
+      pets:
+        items:
+          $ref: '#/definitions/model.Pet'
+        type: array
+      role:
+        type: string
+      updatedAt:
+        type: string
+      username:
+        type: string
+    type: object
+  service.UserSignupParams:
+    properties:
+      contact:
+        type: string
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+      username:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: This is the API documentation for the Pet Clinic Management System.
+  title: Pet Clinic Management System API
+  version: "1.0"
+paths:
+  /appointments/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Deletes an appointment by its ID.
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: Appointment deleted successfully
+        "400":
+          description: Invalid appointment ID
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Resource not owned
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Appointment
+      tags:
+      - Appointment
+    get:
+      consumes:
+      - application/json
+      description: Fetches an appointment by its ID.
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Appointment details
+          schema:
+            $ref: '#/definitions/model.Appointment'
+        "400":
+          description: Invalid appointment ID
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Resource not owned
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Appointment by ID
+      tags:
+      - Appointment
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing appointment by its ID.
+      parameters:
+      - description: Appointment ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Appointment parameters
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.AppointmentParams'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Appointment updated successfully
+          schema:
+            $ref: '#/definitions/model.Appointment'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Resource not owned
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Appointment not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update Appointment
+      tags:
+      - Appointment
+  /login:
+    post:
+      consumes:
+      - application/json
+      description: Logs in a user with username and password.
+      parameters:
+      - description: Login request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.LoginRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Login successful
+          schema:
+            $ref: '#/definitions/handlers.LoginSuccessResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: User Login
+      tags:
+      - User
+  /owners:
+    delete:
+      description: Deletes user by user ID.
+      responses:
+        "204":
+          description: User deleted successfully
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Resource not owned
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete User
+      tags:
+      - User
+    get:
+      description: Fetches user details by user ID.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User details
+          schema:
+            $ref: '#/definitions/model.User'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Resource not owned
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get User by ID
+      tags:
+      - User
+    put:
+      consumes:
+      - application/json
+      description: Updates user details by user ID.
+      parameters:
+      - description: Update user request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: User updated successfully
+          schema:
+            $ref: '#/definitions/model.User'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Resource not owned
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: User not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update User
+      tags:
+      - User
+  /pets:
+    get:
+      description: Fetches all pets owned by the authenticated user.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of pets owned by the user
+          schema:
+            items:
+              $ref: '#/definitions/model.Pet'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Pets by Owner
+      tags:
+      - Pet
+    post:
+      consumes:
+      - application/json
+      description: Creates a new pet with the provided details.
+      parameters:
+      - description: Create pet request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreatePetRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Pet created successfully
+          schema:
+            $ref: '#/definitions/model.Pet'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Resource not owned
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Create a new Pet
+      tags:
+      - Pet
+  /pets/{id}:
+    delete:
+      description: Deletes a pet by its ID.
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: Pet deleted successfully
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Resource not owned
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Pet not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Delete Pet
+      tags:
+      - Pet
+    get:
+      description: Fetches a pet by its ID.
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Pet fetched successfully
+          schema:
+            $ref: '#/definitions/model.Pet'
+        "400":
+          description: Invalid Pet ID
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Resource not owned
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Pet not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: Get Pet by ID
+      tags:
+      - Pet
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing pet by its ID.
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Update pet request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/handlers.CreatePetRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Pet updated successfully
+          schema:
+            $ref: '#/definitions/model.Pet'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Resource not owned
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Pet not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Update Pet
+      tags:
+      - Pet
+  /pets/{id}/documents:
+    get:
+      description: Fetches all documents for a specific pet.
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of pet document names
+          schema:
+            items:
+              type: string
+            type: array
+        "400":
+          description: Invalid Pet ID
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Resource not owned
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Pet not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Pet Documents
+      tags:
+      - Pet
+  /pets/{id}/documents/{docName}:
+    get:
+      description: Fetches a specific document for a pet by its name.
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Document name
+        in: path
+        name: docName
+        required: true
+        type: string
+      produces:
+      - application/octet-stream
+      responses:
+        "200":
+          description: Pet document file
+          schema:
+            type: string
+        "400":
+          description: Invalid Pet ID or Document Name
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "403":
+          description: Resource not owned
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Pet document not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Pet Document by Name
+      tags:
+      - Pet
+  /signup:
+    post:
+      consumes:
+      - application/json
+      description: Registers a new user with name, username and password.
+      parameters:
+      - description: Signup request body
+        in: body
+        name: body
+        required: true
+        schema:
+          $ref: '#/definitions/service.UserSignupParams'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Signup successful
+          schema:
+            $ref: '#/definitions/handlers.LoginSuccessResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      summary: User Signup
+      tags:
+      - User
+  /staff/appointments/today:
+    get:
+      description: |-
+        Fetches all upcoming appointments for the authenticated owner.
+        This endpoint is restricted to staff users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of upcoming appointments for owner
+          schema:
+            items:
+              $ref: '#/definitions/model.Appointment'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Upcoming Appointments by Owner
+      tags:
+      - Appointment
+  /staff/appointments/upcoming:
+    get:
+      description: |-
+        Fetches all upcoming appointments.
+        This endpoint is restricted to staff users.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of upcoming appointments
+          schema:
+            items:
+              $ref: '#/definitions/model.Appointment'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get Upcoming Appointments
+      tags:
+      - Appointment
+  /staff/pets:
+    get:
+      description: |-
+        Fetches all pets.
+        This endpoint is restricted to staff users only.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of pets
+          schema:
+            items:
+              $ref: '#/definitions/model.Pet'
+            type: array
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Get All Pets
+      tags:
+      - Pet
+  /staff/pets/{id}/upload:
+    post:
+      consumes:
+      - multipart/form-data
+      description: |-
+        Uploads a document for a specific pet.
+        This endpoint is restricted to staff users only.
+      parameters:
+      - description: Pet ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: File to upload
+        in: formData
+        name: file
+        required: true
+        type: file
+      - description: File name
+        in: formData
+        name: name
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Pet document uploaded successfully
+          schema:
+            $ref: '#/definitions/handlers.UploadPetDocumentResponse'
+        "400":
+          description: Invalid input
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "404":
+          description: Pet not found
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+        "500":
+          description: Internal server error
+          schema:
+            $ref: '#/definitions/handlers.ErrorResponse'
+      security:
+      - BearerAuth: []
+      summary: Upload Pet Document
+      tags:
+      - Pet
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and JWT token
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"
