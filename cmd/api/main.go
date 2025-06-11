@@ -37,6 +37,8 @@ func init() {
 // @in header
 // @name Authorization
 // @description Type "Bearer" followed by a space and JWT token
+// @BasePath /
+// @schemes http
 func main() {
 
 	l := logger.Get()

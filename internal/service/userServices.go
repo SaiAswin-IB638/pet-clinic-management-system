@@ -24,6 +24,7 @@ func (e UserNotFoundError) Error() string {
 
 var ErrInvalidCredentials = errors.New("invalid credentials")
 var ErrInvalidUserInput = errors.New("all fields are required")
+var ErrPasswordTooShort = errors.New("password must be at least 8 characters long")
 
 type UserSignupParams struct {
 	Username string `json:"username"`
@@ -64,7 +65,7 @@ func (userService *UserService) Signup(userParams *UserSignupParams) (string, er
 		return "", ErrInvalidUserInput
 	}
 	if len(user.Password) < 8 {
-		return "", errors.New("password must be at least 6 characters long")
+		return "", ErrPasswordTooShort
 	}
 	if tx := initializers.DB.Where("username = ?", user.Username).First(&model.User{}); tx.Error == nil {
 		return "", ErrInvalidCredentials

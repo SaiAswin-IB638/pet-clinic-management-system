@@ -103,9 +103,13 @@ func (h *handlerService) SignupHandler(w http.ResponseWriter, r *http.Request) {
 		} else if errors.Is(err, service.ErrInvalidUserInput) {
 			h.respond(w, err, http.StatusBadRequest)
 			return
+		} else if errors.Is(err, service.ErrPasswordTooShort) {
+			h.respond(w, err, http.StatusBadRequest)
+			return
 		}
 		l.Error().Err(err).Msg("Failed to create user")
 		h.respond(w, err, http.StatusInternalServerError)
+		return
 	}
 	l.Info().Str("username", body.Username).Msg("User signup successful")
 	h.respond(w, map[string]string{"token": token}, http.StatusCreated)
