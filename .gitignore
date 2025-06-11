@@ -1,3 +1,4 @@
 .vscode/settings.json
 .env
 pcms.log
+setenv.sh

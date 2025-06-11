@@ -1,9 +1,11 @@
 package routes
 
 import (
+	_ "github.com/MSaiAswin/pet-clinic-management-system/cmd/api/docs"
 	"github.com/MSaiAswin/pet-clinic-management-system/internal/handlers"
 	"github.com/MSaiAswin/pet-clinic-management-system/internal/middleware"
 	"github.com/gorilla/mux"
+	httpSwagger "github.com/swaggo/http-swagger"
 )
 
 func NewRouter() *mux.Router {
@@ -12,6 +14,8 @@ func NewRouter() *mux.Router {
 	handlerService := handlers.NewService()
 
 	router.Use(middleware.RequestLogger)
+
+	router.PathPrefix("/swagger").Handler(httpSwagger.WrapHandler)
 
 	router.HandleFunc("/signup", handlerService.SignupHandler).Methods("POST")
 	router.HandleFunc("/login", handlerService.LoginHandler).Methods("POST")

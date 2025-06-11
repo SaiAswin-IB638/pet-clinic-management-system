@@ -4,7 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"time"
 
+	_ "github.com/MSaiAswin/pet-clinic-management-system/cmd/api/docs"
 	"github.com/MSaiAswin/pet-clinic-management-system/internal/model"
 	"github.com/MSaiAswin/pet-clinic-management-system/internal/service"
 	"github.com/MSaiAswin/pet-clinic-management-system/internal/validators"
@@ -12,6 +14,26 @@ import (
 	"github.com/rs/zerolog"
 )
 
+type AppointmentParams struct {
+	Slot   time.Time `json:"slot" example:"2023-10-01T10:00:00Z"`
+	Reason string    `json:"reason" example:"Regular checkup"`
+	PetID  uint      `json:"pet_id" example:"1"`
+}
+
+// GetAppointmentByIDHandler godoc
+// @Summary Get Appointment by ID
+// @Description Fetches an appointment by its ID.
+// @Tags Appointment
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path uint true "Appointment ID"
+// @Success 200 {object} model.Appointment "Appointment details"
+// @Failure 400 {object} ErrorResponse "Invalid appointment ID"
+// @Failure 404 {object} ErrorResponse "Appointment not found"
+// @Failure 403 {object} ErrorResponse "Resource not owned"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Router /appointments/{id} [get]
 func (h *handlerService) GetAppointmentByIDHandler(w http.ResponseWriter, r *http.Request) {
 	l := zerolog.Ctx(r.Context())
 	l.Trace().Msg("Inside GetAppointmentByIDHandler")
@@ -44,16 +66,35 @@ func (h *handlerService) GetAppointmentByIDHandler(w http.ResponseWriter, r *htt
 	h.respond(w, appointment, http.StatusOK)
 }
 
+// CreateAppointmentHandler godoc
+// @Summary Create Appointment
+// @Description Creates a new appointment.
+// @Tags Appointment
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param body body AppointmentParams true "Appointment parameters"
+// @Success 201 {object} model.Appointment "Appointment created successfully"
+// @Failure 400 {object} ErrorResponse "Invalid input"
+// @Failure 404 {object} ErrorResponse "Pet not found"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// Failure 401 {object} ErrorResponse "Unauthorized"
+// @Router /appointments [post]
+
 func (h *handlerService) CreateAppointmentHandler(w http.ResponseWriter, r *http.Request) {
 	l := zerolog.Ctx(r.Context())
 	l.Trace().Msg("Inside CreateAppointmentHandler")
 	l.Info().Msg("Incoming request to create a new appointment")
-	var appointment model.Appointment
-	if err := json.NewDecoder(r.Body).Decode(&appointment); err != nil {
+	var appointmentParams AppointmentParams
+	if err := json.NewDecoder(r.Body).Decode(&appointmentParams); err != nil {
 		h.respond(w, err, http.StatusBadRequest)
 		return
 	}
-
+	appointment := model.Appointment{
+		Slot:   appointmentParams.Slot,
+		Reason: appointmentParams.Reason,
+		PetID:  appointmentParams.PetID,
+	}
 	if err := h.appointmentService.AddAppointment(&appointment, r.Context()); err != nil {
 		if errors.As(err, &service.AppointmentFoundError{}) {
 			h.respond(w, err, http.StatusBadRequest)
@@ -77,6 +118,22 @@ func (h *handlerService) CreateAppointmentHandler(w http.ResponseWriter, r *http
 	h.respond(w, appointment, http.StatusCreated)
 }
 
+// UpdateAppointmentHandler godoc
+// @Summary Update Appointment
+// @Description Updates an existing appointment by its ID.
+// @Tags Appointment
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path uint true "Appointment ID"
+// @Param body body AppointmentParams true "Appointment parameters"
+// @Success 200 {object} model.Appointment "Appointment updated successfully"
+// @Failure 400 {object} ErrorResponse "Invalid input"
+// @Failure 404 {object} ErrorResponse "Appointment not found"
+// @Failure 403 {object} ErrorResponse "Resource not owned"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Router /appointments/{id} [put]
 func (h *handlerService) UpdateAppointmentHandler(w http.ResponseWriter, r *http.Request) {
 	l := zerolog.Ctx(r.Context())
 	l.Trace().Msg("Inside UpdateAppointmentHandler")
@@ -88,10 +145,15 @@ func (h *handlerService) UpdateAppointmentHandler(w http.ResponseWriter, r *http
 		return
 	}
 	l.Debug().Uint("appointmentID", appointmentID).Msg("Updating appointment by ID")
-	var appointment model.Appointment
-	if err := json.NewDecoder(r.Body).Decode(&appointment); err != nil {
+	var appointmentParams AppointmentParams
+	if err := json.NewDecoder(r.Body).Decode(&appointmentParams); err != nil {
 		h.respond(w, err.Error(), http.StatusBadRequest)
 		return
+	}
+	appointment := model.Appointment{
+		Slot:   appointmentParams.Slot,
+		Reason: appointmentParams.Reason,
+		PetID:  appointmentParams.PetID,
 	}
 	if err := h.appointmentService.UpdateAppointment(appointmentID, &appointment, r.Context()); err != nil {
 		if errors.As(err, &service.AppointmentNotFoundError{}) {
@@ -119,6 +181,21 @@ func (h *handlerService) UpdateAppointmentHandler(w http.ResponseWriter, r *http
 	h.respond(w, appointment, http.StatusOK)
 }
 
+// DeleteAppointmentHandler godoc
+// @Summary Delete Appointment
+// @Description Deletes an appointment by its ID.
+// @Tags Appointment
+// @Accept json
+// @Produce json
+// @Security BearerAuth
+// @Param id path uint true "Appointment ID"
+// @Success 204 "Appointment deleted successfully"
+// @Failure 400 {object} ErrorResponse "Invalid appointment ID"
+// @Failure 404 {object} ErrorResponse "Appointment not found"
+// @Failure 403 {object} ErrorResponse "Resource not owned"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Router /appointments/{id} [delete]
 func (h *handlerService) DeleteAppointmentHandler(w http.ResponseWriter, r *http.Request) {
 	l := zerolog.Ctx(r.Context())
 	l.Trace().Msg("Inside DeleteAppointmentHandler")
@@ -146,6 +223,17 @@ func (h *handlerService) DeleteAppointmentHandler(w http.ResponseWriter, r *http
 	h.respond(w, nil, http.StatusNoContent)
 }
 
+// GetUpcomingAppointmentsHandler godoc
+// @Summary Get Upcoming Appointments
+// @Description Fetches all upcoming appointments.
+// @Description This endpoint is restricted to staff users.
+// @Tags Appointment
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} model.Appointment "List of upcoming appointments"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Router /staff/appointments/upcoming [get]
 func (h *handlerService) GetUpcomingAppointmentsHandler(w http.ResponseWriter, r *http.Request) {
 	l := zerolog.Ctx(r.Context())
 	l.Trace().Msg("Inside GetUpcomingAppointmentsHandler")
@@ -176,6 +264,17 @@ func (h *handlerService) GetTodayAppointmentsHandler(w http.ResponseWriter, r *h
 	h.respond(w, appointments, http.StatusOK)
 }
 
+// GetUpcomingAppointmentsByOwnerHandler godoc
+// @Summary Get Upcoming Appointments by Owner
+// @Description Fetches all upcoming appointments for the authenticated owner.
+// @Description This endpoint is restricted to staff users.
+// @Tags Appointment
+// @Produce json
+// @Security BearerAuth
+// @Success 200 {array} model.Appointment "List of upcoming appointments for owner"
+// @Failure 500 {object} ErrorResponse "Internal server error"
+// @Failure 401 {object} ErrorResponse "Unauthorized"
+// @Router /staff/appointments/today [get]
 func (h *handlerService) GetUpcomingAppointmentsByOwnerHandler(w http.ResponseWriter, r *http.Request) {
 	l := zerolog.Ctx(r.Context())
 	l.Trace().Msg("Inside GetUpcomingAppointmentsByOwnerHandler")
